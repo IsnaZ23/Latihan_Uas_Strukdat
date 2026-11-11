@@ -1,0 +1,34 @@
+# Hasil kompilasi C/C++
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.pdb
+*.ilk
+*.pch
+*.gch
+
+# Folder dan file hasil build
+/Materi-materi/
+/build/
+/bin/
+/obj/
+/Debug/
+/Release/
+/x64/
+/x86/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# File sementara sistem dan editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
