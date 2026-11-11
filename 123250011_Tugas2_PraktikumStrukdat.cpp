@@ -501,7 +501,7 @@ int main() {
 
     do {
         cout << "\n================================\n";
-        cout << "     SISTEM PEMESANAN RESTORAN\n";
+        cout << "     RESTO Cipluk2 \n";
         cout << "================================\n";
         cout << "1. Tambah Menu\n";
         cout << "2. Lihat Daftar Menu\n";
