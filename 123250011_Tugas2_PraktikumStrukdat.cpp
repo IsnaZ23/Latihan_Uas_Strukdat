@@ -2,7 +2,9 @@
 #include <string>
 using namespace std;
 
-//waiting list
+//==========================================
+// QUEUE (waiting list)
+//==========================================
 
 struct Pelanggan {
     string nama;
@@ -19,7 +21,6 @@ void initQueue(Queue &q) {
     q.rear = nullptr;
 }
 
-
 void enqueue(Queue &q, string nama) {
     Pelanggan* baru = new Pelanggan;
     baru->nama = nama;
@@ -34,7 +35,7 @@ void enqueue(Queue &q, string nama) {
     }
 }
 
-
+// dipakai saat undo: mengembalikan pelanggan ke depan antrian
 void enqueueFront(Queue &q, string nama) {
     Pelanggan* baru = new Pelanggan;
     baru->nama = nama;
@@ -46,7 +47,6 @@ void enqueueFront(Queue &q, string nama) {
         q.rear = baru;
     }
 }
-
 
 string dequeue(Queue &q) {
     if (q.front == nullptr) {
@@ -66,6 +66,7 @@ string dequeue(Queue &q) {
     return nama;
 }
 
+// dipakai saat undo: menghapus pelanggan paling belakang
 void hapusBelakang(Queue &q) {
     if (q.front == nullptr) {
         return;
@@ -89,21 +90,9 @@ void hapusBelakang(Queue &q) {
     q.rear->next = nullptr;
 }
 
-void tampilQueue(Queue q) {
-    if (q.front == nullptr) {
-        cout << "Antrian kosong\n";
-        return;
-    }
-
-    Pelanggan* bantu = q.front;
-
-    while (bantu != nullptr) {
-        cout << bantu->nama << " menunggu menu\n";
-        bantu = bantu->next;
-    }
-}
-
-//bst
+//==========================================
+// PTB (menu, kunci = nama menu)
+//==========================================
 
 struct Node {
     string nama;
@@ -123,7 +112,7 @@ Node* buatNode(string nama, string kategori, int harga) {
     baru->nama = nama;
     baru->kategori = kategori;
     baru->harga = harga;
-    baru->tersedia = true;
+    baru->tersedia = true;   // status awal otomatis "Tersedia"
 
     initQueue(baru->antrian);
 
@@ -148,9 +137,6 @@ Node* tambahMenu(Node* root, string nama,
         root->right = tambahMenu(
             root->right, nama, kategori, harga);
     }
-    else {
-        cout << "Menu sudah ada!\n";
-    }
 
     return root;
 }
@@ -167,6 +153,7 @@ Node* cariMenu(Node* root, string nama) {
     return cariMenu(root->right, nama);
 }
 
+// inorder: menu tampil urut alfabet
 void tampilMenu(Node* root) {
     if (root == nullptr) {
         return;
@@ -184,13 +171,11 @@ void tampilMenu(Node* root) {
     tampilMenu(root->right);
 }
 
-
 void hapusQueue(Queue &q) {
     while (q.front != nullptr) {
         dequeue(q);
     }
 }
-
 
 Node* hapusMenu(Node* root, string nama) {
     if (root == nullptr) {
@@ -204,7 +189,7 @@ Node* hapusMenu(Node* root, string nama) {
         root->right = hapusMenu(root->right, nama);
     }
     else {
-
+        // 0 anak atau hanya anak kanan
         if (root->left == nullptr) {
             Node* temp = root->right;
             hapusQueue(root->antrian);
@@ -212,7 +197,7 @@ Node* hapusMenu(Node* root, string nama) {
             return temp;
         }
 
-        
+        // hanya anak kiri
         if (root->right == nullptr) {
             Node* temp = root->left;
             hapusQueue(root->antrian);
@@ -220,7 +205,7 @@ Node* hapusMenu(Node* root, string nama) {
             return temp;
         }
 
-        
+        // 2 anak: cari penerus inorder (terkecil di subtree kanan)
         Node* penerus = root->right;
 
         while (penerus->left != nullptr) {
@@ -259,20 +244,21 @@ void bebaskanTree(Node* &root) {
     root = nullptr;
 }
 
-//undo
+//==========================================
+// STACK (riwayat aksi untuk undo)
+//==========================================
 
 struct Aksi {
-    int jenis;
+    int jenis;                  // 1 = pesanan, 2 = pembaruan menu
     string namaMenu;
     string namaPelanggan;
-    bool masukAntrian;
-    string pelangganDilayani;
+    bool masukAntrian;          // jenis 1: pelanggan masuk waiting list?
+    string pelangganDilayani;   // jenis 2: pelanggan yang dilayani dari waiting list
 
     Aksi* next;
 };
 
 Aksi* top = nullptr;
-
 
 void push(int jenis, string menu,
           string pelanggan = "",
@@ -299,6 +285,9 @@ void bebaskanStack() {
     }
 }
 
+//==========================================
+// INPUT
+//==========================================
 
 bool bacaAngka(string pesan, int &hasil) {
     string input;
@@ -316,6 +305,9 @@ bool bacaAngka(string pesan, int &hasil) {
 }
 
 //==========================================
+// FITUR
+//==========================================
+
 // 1. Menambahkan menu
 void fiturTambahMenu(Node* &root) {
     string nama, kategori;
@@ -369,7 +361,9 @@ void fiturPesan(Node* root) {
         return;
     }
 
-    if (menu->tersedia) {
+    // Langsung dibuat hanya jika menu tersedia DAN tidak ada yang
+    // sedang menunggu, supaya pelanggan baru tidak menyerobot antrian.
+    if (menu->tersedia && menu->antrian.front == nullptr) {
         push(1, namaMenu, pelanggan, false);
 
         cout << "Pesanan " << pelanggan
@@ -465,6 +459,7 @@ void fiturUndo(Node* root) {
     }
     else if (hapus->jenis == 2) {
         menu->tersedia = false;
+
         if (hapus->pelangganDilayani != "") {
             enqueueFront(
                 menu->antrian,
@@ -510,7 +505,8 @@ void fiturWaitingList(Node* root) {
     }
 }
 
-//=======================================================================================================================
+
+//==========================================
 
 int main() {
     Node* root = nullptr;
@@ -572,7 +568,6 @@ int main() {
         }
 
     } while (pilihan != 8);
-
 
     bebaskanTree(root);
     bebaskanStack();
